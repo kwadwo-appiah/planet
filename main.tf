@@ -2,32 +2,40 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "5.55.0"
+      version = "5.40.0"
     }
   }
+  backend "s3" {
+    bucket = "mymikebucket"
+    key = "backend/dev/mike/terraformstate"
+    region = "eu-west-2"
+
+  }
+
 }
 
 provider "aws" {
-  region = "eu-west-2"
+  region = var.region
 }
 
 provider "aws" {
   alias = "new"
-  region = "us-west-1"
+  region = var.region1
 }
 
 provider "aws" {
   alias = "new2"
-  region = "us-east-1"
+  region = var.region2
 }
 
 resource "aws_iam_user" "test" {
-  name = "Appiah"
+  name = var.aws_iam_user
 }
+
 data "aws_iam_policy_document" "muse" {
   statement {
     sid = "1appiahpolicy"
-
+  
     actions = [
       "s3:ListAllMyBuckets",
       "s3:GetBucketLocation",
@@ -42,7 +50,7 @@ data "aws_iam_policy_document" "muse" {
 }
 
 resource "aws_iam_policy" "policy" {
-  name   = "single_policy"
+  name   = var.aws_iam_policy
   path   = "/"
   policy = data.aws_iam_policy_document.muse.json
 }
@@ -54,35 +62,35 @@ resource "aws_iam_user_policy_attachment" "test-attach" {
 
 resource "aws_iam_user_policy_attachment" "test-attach2" {
   user       = aws_iam_user.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+  policy_arn = var.policy_arn
 }
 
 resource "aws_instance" "this" {
-  ami           = "ami-07c1b39b7b3d2525d"
-  instance_type = "t2.micro"
+  ami           = var.aws_instancethis
+  instance_type = var.aws_instance_type_this
 
   tags = {
-    Name = "Agyenkwa"
+    Name = var.tagName1
   }
 }
 
 resource "aws_instance" "that" {
-  ami           = "ami-0ff591da048329e00"
+  ami           = var.aws_instancethat
   provider = aws.new
-  instance_type = "t2.micro"
+  instance_type = var.aws_instance_type_that
 
   tags = {
-    Name = "Yehowah"
+    Name = var.tagName2
   }
 }
 
 resource "aws_instance" "these" {
   ami           = "ami-04a81a99f5ec58529"
   provider = aws.new2
-  instance_type = "t2.micro"
+  instance_type = var.aws_instance_type_these
 
   tags = {
-    Name = "Adom"
+    Name = var.tagName3
   }
 }
 output "ec2instanceip" {
